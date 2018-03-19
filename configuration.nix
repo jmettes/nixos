@@ -10,13 +10,13 @@
       ./hardware-configuration.nix
     ];
 
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  # virtualbox boot loading
+  boot.loader.grub.device = "/dev/sda";
+  virtualisation.virtualbox.guest.enable = true;
+  virtualisation.docker.enable = true;
+#  virtualisation.docker.enableOnBoot = true;
 
   networking.hostName = "nixos"; # Define your hostname.
-  #networking.networkmanager.enable = true;
-  networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Select internationalisation properties.
   i18n = {
@@ -34,15 +34,19 @@
   # $ nix-env -qaP | grep wget
   environment.systemPackages = with pkgs; [
     systemToolsEnv
-    chromium
+    busybox
     dmenu
+    docker
+    emacs
+    firefox
     vim
     haskellPackages.X11
     haskellPackages.xmobar
     haskellPackages.xmonad
     haskellPackages.xmonad-contrib
     haskellPackages.xmonad-extras
-    xorg.xbacklight
+    linuxPackages.virtualboxGuestAdditions
+    rxvt_unicode
   ];
 
   fonts = {
@@ -56,76 +60,9 @@
     ];
   }; 
 
-  # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable the X11 windowing system.
-  # services.xserver.enable = true;
-  # services.xserver.layout = "us";
-  # services.xserver.xkbOptions = "eurosign:e";
-
-  # Enable the KDE Desktop Environment.
-  # services.xserver.displayManager.sddm.enable = true;
-  # services.xserver.desktopManager.gnome.enable = true;
-  # services.xserver.desktopManager.kde4.enable = true;
-  # services.xserver.synaptics.enable = true;
-
 
   services.xserver = {
     enable = true;
-
-    synaptics = {
-      enable = true;
-      tapButtons = true;
-      fingersMap = [1 3 2];
-      horizTwoFingerScroll = true;
-      vertTwoFingerScroll = true;
-      scrollDelta = 107;
-      accelFactor = "0.1";
-      twoFingerScroll = true;
-
-      # palm detection
-      # https://askubuntu.com/questions/229311/synaptics-touchpad-solving-2-finger-problem-triggered-by-resting-palm/772103#772103
-      palmDetect = true;
-      palmMinWidth = 10;
-      palmMinZ = 0;
-      additionalOptions = ''
-        # https://askubuntu.com/a/772103
-        Option "AreaLeftEdge" "2000"
-        Option "AreaRightEdge" "5500"
-      '';
-    };
-
-# libinput has "disableWhileTyping", which works pretty well for palm detection
-# but does not support 'kinetic scrolling/coasting' like synaptics:
-#    libinput = {
-#      enable = true;
-#      accelProfile = "adaptive";
-#      accelSpeed = "0.7";
-#      scrollMethod = "twofinger";
-#      tapping = true;
-#      naturalScrolling = false;
-#      disableWhileTyping = true;
-#      tappingDragLock = false;
-#    };
-
-
-
-    # synaptics.enable = true;
-    # synaptics.minSpeed = "1";
-    # synaptics.palmDetect = true;
-    # synaptics.twoFingerScroll = true;
 
     displayManager.slim.enable = true;
     displayManager.slim.defaultUser = "jonathan";
@@ -133,12 +70,6 @@
     windowManager.xmonad.enable = true;
     windowManager.xmonad.enableContribAndExtras = true;
   };
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  # users.extraUsers.guest = {
-  #   isNormalUser = true;
-  #   uid = 1000;
-  # };
 
   security.sudo = {
     enable = true;
@@ -150,7 +81,7 @@
     uid = 1000;
     description = "Jonathan Mettes";
     home = "/home/jonathan";
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "docker" ];
  };
 
   # The NixOS release to be compatible with for stateful data such as databases.
